@@ -61,7 +61,7 @@ public class Bai05beetlsqlApplication {
     @Bean(name = "beetlSqlScannerConfigurer")
     public BeetlSqlScannerConfigurer getBeetlSqlScannerConfigurer() {
         BeetlSqlScannerConfigurer conf = new BeetlSqlScannerConfigurer();
-        conf.setBasePackage("com.forezp.dao");
+        conf.setBasePackage("com.example.bai05beetlsql.dao");
         conf.setDaoSuffix("Dao");
         conf.setSqlManagerFactoryBeanName("sqlManagerFactoryBean");
         return conf;

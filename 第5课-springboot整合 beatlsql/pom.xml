@@ -6,7 +6,7 @@
     <groupId>com.example</groupId>
     <artifactId>bai05beetlsql</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <packaging>war</packaging>
+    <packaging>jar</packaging>
 
     <name>bai05beetlsql</name>
     <description>第5课-springboot整合 beatlsql</description>
@@ -74,12 +74,8 @@
     <build>
         <plugins>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-war-plugin</artifactId>
-                <configuration>   <!--war打包的文件名称，以及引入资源-->
-                    <warSourceExcludes>src/main/resources/**</warSourceExcludes>
-                    <warName>mywebName</warName>
-                </configuration>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
         </plugins>
     </build>
