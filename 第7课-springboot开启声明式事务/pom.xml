@@ -4,12 +4,12 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.example</groupId>
-	<artifactId>bai06mybatis</artifactId>
+	<artifactId>bai07txmanager</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
-	<name>bai06mybatis</name>
-	<description>第6课-springboot整合mybatis</description>
+	<name>bai07txmanager</name>
+	<description>第7课-springboot开启声明式事务</description>
 
 	<parent>
 		<groupId>org.springframework.boot</groupId>

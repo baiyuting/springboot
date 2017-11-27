@@ -1,24 +1,24 @@
-package com.example.bai06mybatis;
+package com.example.bai07txmanager;
 
-import com.example.bai06mybatis.service.AccountService;
+import com.example.bai07txmanager.service.AccountService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.stereotype.Repository;
+import org.springframework.stereotype.Service;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.annotation.Resource;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
-public class Bai06mybatisApplicationTests {
+public class Bai07txmanagerApplicationTests {
 
 	@Resource
 	private AccountService accountService;
 
 	@Test
 	public void contextLoads() {
-		accountService.add("ggg", 1000);
+		accountService.transfer();
 	}
 
 }
