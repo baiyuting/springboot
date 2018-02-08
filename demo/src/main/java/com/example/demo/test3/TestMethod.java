@@ -5,7 +5,7 @@ import java.lang.reflect.Method;
 public class TestMethod {
 
     public static void main(String[] args) {
-        Method[] methods = B.class.getDeclaredMethods();
+        Method[] methods = B.class.getMethods();
         for (Method m :
                 methods) {
             System.out.println(m.getName());
