@@ -1,0 +1,165 @@
+
+暂时把 vpicture_read 分为 【公众号事件处理系统】 和 【课程系统】
+首先需要确定 课程系统 中只依赖于 accountId
+    查询结果（有3个controller中使用了openId，ATextWechatController和AVpictureWechatController 公众号事件处理系统 的范围 ，不在 课程系统 内，不考虑）：
+        1、AAccountController:signup|login|getWechatUser
+        2、ALessonController:changeReadStatusAndUnlock
+        3、AUserController:shareLearningOutcome
+        需要逐一排查。
+然后再处理 公众号事件处理系统
+
+课程系统
+1、AAccountController:
+    1.1、signup
+        //TODO openId和openId2的设置，需要区分openId是老公众号的还是新的公众号的，设置 account的不同字段进行添加 *
+        关系到 user 表
+            AwowschTempService：fixVpictureOpenId 定时任务（已经停止api,task，为了避免影响，删除）*
+            AUserService：getUserByAccountId （这儿 userDTO.setOpenId(user.getOpenId());，是DTO的赋值，可以不用设置，删除，同时 UserDTO 中删除 openId 字段） *
+            AUserService：getUserByOpenId
+                （AAccountService：refreshOpenIdByAccountId还需要处理，但是属于 公众号事件处理系统 范围内，暂时不需要处理） *
+                    refreshOpenIdByAccountId是专门为 AVpictureWechatController 老的微信系统 设计的刷新方法，不用于 AVpictureWechatHuiBenGuanController 新的微信系统
+            AUserService：markUserWithOpenIdsuffix *
+        关系到 UserPictureBook 表 *
+        关系到 UserLesson 表(user_lesson 表中 openId字段 变成 排名信息，但在 markUserWithOpenIdsuffix 中还有使用，但是该方法已经不使用了，所以处理完毕) *
+    1.2、login *
+    1.3、getWechatUser *
+2、ALessonController : changeReadStatusAndUnlock 解决方案：两个公众号都发消息，正在执行 （需要实现 Wowschool绘本馆 的消息发送 wechatService ，这是 公众号事件处理系统 范围）？
+3、AUserController:shareLearningOutcome （需要实现 Wowschool绘本馆 的消息发送 wechatService ，这是 公众号事件处理系统 范围）？
+测试 *
+验收 *
+课程系统上线：
+    sql *
+    api *
+    task *
+
+
+公众号事件处理系统
+1、公众号：
+    基本配置 ？
+        公众号开发信息 *
+            wechat5.appid=wxe7a391adfec28e1c *
+            wechat5.appsecret=f28e4b1a3e113453b28e06e6631134a7 *
+            chivox5.appkey=149628507800000e *
+            chivox5.secretkey=9b5456cf3a9ea88de9ae717615d5f1fe *
+            ip白名单 *
+                54.223.248.161
+                54.223.31.76
+                54.223.38.186
+                54.223.149.211
+                36.110.67.5
+        服务器配置 上线之后再配置 ？
+    模板添加 （线上）*
+        4个tempId
+        memberjoin.tempid=成员加入提醒 	_NSlaEyP8l_lDawyIDWmSCsvWGDCu0OYQfiZgqQsAxU *
+        lessonfinal.tempid=中奖结果通知  lRVW7LpSgmGK286RefsNO02BhV6sCoWSHXVRAuoyvlU *
+        enrollsuccess.tempid=报名成功通知  fzjAWmvbQH-R7NawDG5mP8t1O8whF6aghRHnRnFWImI *
+        enrollsuccess.tempid=课程提醒 MqxNSYWCNVimdcRgo9IhpO5P0blQgm0Q7kbPS9bdl-c *
+        没有加入成功（新公众号 模板消息 需要申请，现在已经申请，还需要审核时间为2-3个工作日） 已经添加成功 *
+    素材添加 （线上）*
+        https://api.weixin.qq.com/cgi-bin/token?grant_type=client_credential&appid=wxe7a391adfec28e1c&secret=f28e4b1a3e113453b28e06e6631134a7
+        6个正在使用的image或者audio的mediaId
+        第一本书的第二个lesson，发送语音消息（sendSecondLessonAudioMsg） 20170914_绘本精读_第2个lesson.mp3  *
+            vpicture-read-api:secondlesson2_media_key VNNStlHdcu4oHNBu8gMmgJB-sBs_WxueF8X1SNl4hnA
+        第一本书的第三个lesson，发送图片消息(sendThirdLessonImgMsg)   20170914_绘本精读_第3个lesson.jpg  *
+            vpicture-read-api:thirdlesson2_media_key VNNStlHdcu4oHNBu8gMmgE2RqmLda01R1mjsKdrM9xM
+        学习完第一本书并分享，发送图片消息（sendFirstBookImgMsg） 20170914_绘本精读_第1本书.jpg   *
+            vpicture-read-api:firstbook2_media_key VNNStlHdcu4oHNBu8gMmgM0QU68esnE5EWMc5oPabus
+        学习完第二本书并分享，发送语音消息(sendSecondBookAudioMsg) 20170914_绘本精读_第2本书_为什么读绘本.mp3  *
+            vpicture-read-api:secondbook2_media_key VNNStlHdcu4oHNBu8gMmgNt5SCddWq6qRE67Ph1LsIs
+        新用户扫码关注微信公众号，收到新成员加入的音频消息 20170822_绘本精读新成员音频.mp3 *
+            vpicture-read-api:newmember_audio2_media_key VNNStlHdcu4oHNBu8gMmgFhq-oOp_nI6PopFR67jLMs
+        邀请者拉新人数 referNo=3，发送报名成功图片，是添加班主任加微信群的二维码 20170822_绘本精读报名成功图片.png *
+            vpicture-read-api:enrollsuccess2_media_key VNNStlHdcu4oHNBu8gMmgIAQGzYODUO5qeROlG7zmMM
+        redis设置 *
+
+2、weixin *
+    测试环境：使用哇校英语（作为 Wowschool哇校 的测试账号）、哇校（作为 Wowschool绘本馆 的测试账号） *
+    线上环境：使用Wowschool哇校、Wowschool绘本馆 *
+    WowschVpictureHuiBenGuanController *
+
+3、api
+    AVpictureWechatHuiBenGuanService *
+        AVpictureWechatHuiBenGuanServiceTest *
+    AVpictureWechatController 老的微信系统 修改 *
+        1、保存消息WowschMsg *
+        2、用户：添加成为粉丝(wowsch_user) *
+        3、用户：由于公众号迁移而尝试刷新数据（openId） *
+        4、用户：报名(picture_enroll) *
+        5、扫码用户：
+            添加扫码记录(picture_card_scan) *
+            获得阅读权限（绘本精读开课二维码 VpictureLearning （赋予用户阅读权限） picture_enroll status=1) *
+            是否注册(account表中记录 根据 openId 和 openId2 查询) *
+                是(account!=null)：发送课程提醒模板消息（包含进度信息） *
+                否(account==null)->是否报名成功（picture_enroll status，需要查询新的微信系统的 picture_enroll 报名状态) *
+                    是(status==1)：发送课程提醒模板消息（包含进度信息）*
+                    否(status==0)：欢迎关注大熊出品的绘本精读班，请扫描二维码添加小助手微信，领取上课权限吧！ *
+                                   绘本精读小助手二维码   *
+        6、点击菜单用户：
+            是否注册(account表中记录) *
+                是(account!=null)：发送课程提醒模板消息（包含进度信息） *
+                否(account==null)->是否报名成功（picture_enroll status，需要查询新的微信系统的 picture_enroll 报名状态) *
+                    是(status==1)：发送课程提醒模板消息（包含进度信息） *
+                    否(status==0)：欢迎关注大熊出品的绘本精读班，请扫描二维码添加小助手微信，领取上课权限吧！ *
+                                   绘本精读小助手二维码   *
+        7、发出退订、订阅文本消息用户 *
+            退订：将订阅权限设置为0(picture_enroll subRight=0) 该公众号 退订成功消息回复 *
+            订阅：将订阅权限设置为0(picture_enroll subRight=1) 该公众号 订阅成功消息回复 *
+                是否注册(account表中是否有记录) *
+                    是(account!=null)：发送课程提醒模板消息（包含进度信息） *
+                    否(account==null)->是否报名成功（picture_enroll status，需要查询新的微信系统的 picture_enroll 报名状态) *
+                        是(status==1)：发送课程提醒模板消息（包含进度信息） *
+                        否(status==0)：欢迎关注大熊出品的绘本精读班，请扫描二维码添加小助手微信，领取上课权限吧！  *
+                                       绘本精读小助手二维码   *
+    AVpictureWechatHuiBenGuanController 新的微信系统
+        （这儿的逻辑需要确认）*
+        1、保存消息WowschMsg *
+        2、用户：添加成为粉丝(wowsch_user) *
+        4、用户：报名(picture_enroll) *
+        5、自然流量关注用户 (event_key 为空，MsgType 为 event, Event 为 subscribe ) *
+            自然流量关注用户欢迎 客服消息 *
+            邀请卡（个人二维码，需要代码合为一张图） *
+        6、扫码用户：
+            添加扫码记录(picture_card_scan) *
+            新用户扫码（从未关注过服务号且不是绘本精读的老用户，不是 wowsch_user 粉丝表 中的用户）： *
+                新成员音频消息  *
+                成员加入提醒模板消息  *
+                邀请卡（个人二维码，需要代码合为一张图） *
+            老用户扫码：
+                referNo==0 *
+                    新成员音频消息 *
+                    成员加入提醒模板消息 *
+                    邀请卡（个人二维码） *
+                referNo [1,3) *
+                    报名成功通知 模板消息 *
+                    邀请卡（个人二维码） *
+                referNo>=3
+                    课程提醒
+            邀请者（被扫码者）：
+                如果是新用户，报名表 referNo=referNo+1
+                referNo==1
+                    报名成功通知
+                referNo==2
+                    收到好友[xxx]鼓励文本消息
+                referNo==3
+                    收到好友[xxx]5个鼓励，免费领取奖励文本消息
+        7、输入文本用户：
+            回复“添加班主任” && referNo>=1
+                发送 绘本精读小助手二维码 (与 20170822_绘本精读报名成功图片.png 一样，链接为 https://www.wowschool.com/helper/group?activityId=19）
+        8、点击菜单用户（点击 【绘本精读】 菜单）：
+            查看报名表(picture_enroll status 报名状态，referNo 拉新人数)
+            status==0
+                新成员音频消息
+                成员加入提醒模板消息
+                邀请卡（个人二维码）
+            status==1 && referNo<=2
+                报名成功通知 模板消息
+                邀请卡（个人二维码）
+            status==1 && referNo>=3
+                课程提醒
+
+上线：
+    wechat
+    api
+    task
+    微信公众号配置：服务器配置（基本配置）
+    菜单 模板消息链接 更新 添加 appId
